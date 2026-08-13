@@ -1,0 +1,112 @@
+---
+title: "Quarto example"
+format: 
+  html:
+    toc: true
+  pdf: default
+editor: visual
+date: last-modified # display the date of the last edit
+author:
+  - name: "Michael Vock"
+    affiliation: "University of Bern"
+    email: "m.v@unibe.ch"
+  - name: "Co Author"
+    affiliation: "University of Whatever"
+execute:
+  warning: false
+---
+
+
+
+## Data analysis
+
+```{r}
+#| warning: true
+#| echo: true
+library("dplyr") # data wrangling
+library("ggplot2") # plotting
+library("kableExtra") # tables
+```
+
+
+## Load the data from the statistics office of the city of Zurich and clean it
+
+```{r}
+url <- "https://data.stadt-zuerich.ch/dataset/bev_vornamen_baby_od3700/download/BEV370OD3700.csv"
+dat <- read.csv(url)
+datclean <- dat |>
+    rename(year = StichtagDatJahr,
+           name = Vorname,
+           sex = SexLang,
+           births = AnzGebuWir) |>
+    mutate(sex = ifelse(sex == "weiblich", "female", "male"))
+```
+
+
+## most common name by year and sex
+
+```{r}
+summaries <- datclean |>
+  select(year, name, sex, births) |>
+  group_by(sex, year) |>
+  slice_max(order_by = births, n = 1) |>
+  arrange(-year)
+```
+
+See the most common names in @tbl-names.
+
+```{r}
+#| label: tbl-names
+summaries |>
+  kable(caption = "Most common names of newborns in the city of Zurich by year and sex")
+```
+
+## Plot the most common names between 2021 and 2025
+
+```{r}
+#| fig-cap: "Most common names of Zurich newborns in 2021-2025."
+datclean |>
+  # The upper bound is deliberate: the data set gains a year of records over
+  # time, and bounding the window keeps this figure matching its caption.
+  filter(year >= 2021, year <= 2025) |>
+  group_by(sex, name) |>
+  summarise(births = sum(births)) |>
+  slice_max(order_by = births, n = 10) |>
+  ggplot(aes(x = reorder(name, births), y = births)) +
+  facet_wrap(~ sex, scales = "free") +
+  geom_bar(stat = "identity") +
+  labs(x = "Name", y = "Births", 
+       title = "") +
+  coord_flip() +
+  theme_minimal()
+```
+
+## Frequency of names over time
+
+```{r}
+#| label: freq-over-time
+datclean |>
+  group_by(sex, name, year) |>
+  filter(name %in% c("Fabio", "Daniel", "Michael")) |>
+  ggplot(aes(x = year, y = births, color = name)) +
+  geom_line() +
+  geom_point() +
+  scale_color_viridis_d() +
+  labs(x = "Year", y = "Births", color = "") +
+  expand_limits(y = 0) +
+  theme_minimal()
+```
+
+## Example for inline code
+
+In 2023, the most common male name was `r filter(summaries, year == 2023, sex == "male")$name` whereas the most common female name was `r filter(summaries, year == 2023, sex == "female")$name`.
+
+Problem with ties: In 2025, the most common male name was `r filter(summaries, year == 2025, sex == "male")$name` whereas the most common female name was `r filter(summaries, year == 2025, sex == "female")$name`.
+
+## R session info
+
+```{r}
+#| label: sessioninfo
+sessionInfo()
+```
+
