@@ -7,7 +7,7 @@ format:
 editor: visual
 date: last-modified # display the date of the last edit
 author:
-  - name: "Michael Vock"
+  - name: "M V"
     affiliation: "University of Bern"
     email: "m.v@unibe.ch"
   - name: "Co Author"
@@ -15,8 +15,6 @@ author:
 execute:
   warning: false
 ---
-
-
 
 ## Data analysis
 
@@ -27,7 +25,6 @@ library("dplyr") # data wrangling
 library("ggplot2") # plotting
 library("kableExtra") # tables
 ```
-
 
 ## Load the data from the statistics office of the city of Zurich and clean it
 
@@ -41,7 +38,6 @@ datclean <- dat |>
            births = AnzGebuWir) |>
     mutate(sex = ifelse(sex == "weiblich", "female", "male"))
 ```
-
 
 ## most common name by year and sex
 
@@ -109,4 +105,3 @@ Problem with ties: In 2025, the most common male name was `r filter(summaries, y
 #| label: sessioninfo
 sessionInfo()
 ```
-
